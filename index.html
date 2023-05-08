@@ -1,0 +1,164 @@
+<html>
+  <head>
+    <title>Simple 3D Test</title>
+  </head>
+
+  <style>
+  body {margin: 0;}
+  canvas {width: 100%; height: 100%;}
+  </style>
+
+  <body>
+	<link rel="shortcut icon" href="#">
+
+   
+    <style>
+    			body {
+    				font-family: Monospace;
+    				background-color: #000;
+    				color: #fff;
+    				margin: 0px;
+    				overflow: hidden;
+    			}
+    			#info {
+    				position: absolute;
+    				top: 10px;
+    				width: 100%;
+    				text-align: center;
+    			}
+    </style>
+
+
+
+		<script type="importmap">
+			{
+        
+				"imports": {
+					"three": "./build/three.module.js"
+				}
+
+			}
+      
+		</script>
+	<script src="https://cdn.jsdelivr.net/gh/kripken/ammo.js@HEAD/builds/ammo.wasm.js"></script>
+
+		
+	<script type="module"
+    src="basicworld.js"></script>
+	
+    </script>
+	<script type="x-shader/x-vertex" id="vertexShadersdwSimple">
+		void main()
+		{
+		  vec4 ViewPosition= modelViewMatrix * vec4(position,1.0);
+		  gl_Position=projectionMatrix * ViewPosition;
+		}
+	  </script>
+	<script type="x-shader/x-vertex" id="vertexShaderSimple">
+		out vec2 uvInterpolator;
+
+		void main() {
+		  uvInterpolator = uv;
+		  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+		}
+	  </script>
+
+	  <script type="x-shader/x-fragment" id="fragmentShaderSimple">
+		in vec2 uvInterpolator;
+		uniform float u_time;
+		uniform sampler2D u_texture;
+
+		float random11(float inputValue, float seed) {
+			return fract(sin(inputValue *345.456) *seed);
+		}
+
+		float random21(vec2 inputValue, float seed) {
+			return fract(sin(dot(inputValue,vec2(123.456,43.12))) *seed);
+		}
+	
+		vec2 Drops(vec2 uv, float seed) {
+			float shiftY = random11(0.5, seed);
+			uv.y +=shiftY +u_time *0.1;
+
+
+			float cellResolution = 10.0;
+			uv *= cellResolution;
+
+			float rowIndex = floor(uv.y);
+			float shiftX = random11(rowIndex, seed);
+			uv.x += shiftX;
+			
+			vec2 cellIndex = floor(uv);
+			vec2 cellUv = fract(uv);
+
+			vec2 cellCentre = vec2(0.5);
+			float distanceFromCentre = distance(cellUv, cellCentre);
+			float isInsideDrop = 1.0 - step(0.1, distanceFromCentre);
+
+			float isDropShown = step(0.8, random21(cellIndex, seed +14244.324));
+
+			float dropIntensity = 1.0 - fract(u_time *0.1 +random21(cellIndex, seed +32132.432) *2.0) *2.0;
+			
+			dropIntensity = sign(dropIntensity) *abs(dropIntensity * dropIntensity * dropIntensity * dropIntensity);
+			
+			dropIntensity = clamp(dropIntensity, 0.0, 1.0);
+			
+
+			vec2 vecToCentre = normalize(cellCentre - cellUv);
+			vec2 dropValue = vecToCentre * distanceFromCentre *distanceFromCentre * 40.0;
+
+			vec2 drop = dropValue * isDropShown *dropIntensity * isInsideDrop;
+
+			return drop;
+		}
+		vec2 Drop2s3(vec2 uv, float seed) {
+			float shiftY = random11(0.5, seed);
+			uv.y +=shiftY +u_time *0.1;
+
+
+			float cellResolution = 10.0;
+			uv *= cellResolution;
+
+			float rowIndex = floor(uv.y);
+			float shiftX = random11(rowIndex, seed);
+			uv.x += shiftX;
+			
+			vec2 cellIndex = floor(uv);
+			vec2 cellUv = fract(uv);
+
+			vec2 cellCentre = vec2(0.5);
+			float distanceFromCentre = distance(cellUv, cellCentre);
+			float isInsideDrop = 1.0 - step(0.1, distanceFromCentre);
+
+			float isDropShown = step(0.8, random21(cellIndex, seed +14244.324));
+
+			float dropIntensity = 1.0 - fract(u_time *0.1 +random21(cellIndex, seed +32132.432) *2.0) *2.0;
+			
+			dropIntensity = sign(dropIntensity) *abs(dropIntensity * dropIntensity * dropIntensity * dropIntensity);
+			
+			dropIntensity = clamp(dropIntensity, 0.0, 1.0);
+			
+
+			vec2 vecToCentre = normalize(cellCentre - cellUv);
+			vec2 dropValue = vecToCentre * distanceFromCentre *distanceFromCentre * 40.0;
+
+			vec2 drop = dropValue * isDropShown *dropIntensity * isInsideDrop;
+
+			return drop;
+		}
+		void main()
+		{
+			vec2 uv = uvInterpolator;
+			
+			vec2 drops = vec2(0.0);
+			for(int i =0; i< 10; i++) {
+				drops += Drops(uv ,42424.43 + float(i) * 12313.432 +(u_time *0.3));
+			}
+			uv+= drops;
+			
+			vec4 color = texture2D(u_texture, uv);
+			gl_FragColor = color;
+		}
+	  </script>
+  </body>
+</html>
