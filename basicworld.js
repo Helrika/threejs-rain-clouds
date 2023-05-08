@@ -50,7 +50,8 @@ class rainClouds {
      }
      this.cloudsArr = [];
      this.rainCount =15000;
-
+     this.drops = 0;
+     this.check = false;
 
      //this.textureLoader = new THREE.TextureLoader();
      //this.textureLoader.load("./textures/Smoke-Transparent.png");
@@ -169,7 +170,7 @@ class rainClouds {
   loadRain() {
     //this.rainBuff = new THREE.BufferGeometry();
     //this.rainGeo = new THREE.BoxGeometry();
-    console.log(this.rainGeo)
+    //console.log(this.rainGeo)
     this.vertices = [];
     for(let i = 0; i <this.rainCount; i++) {
       this.rainDrop = new THREE.Vector3(
@@ -177,15 +178,20 @@ class rainClouds {
         Math.random() * 500 -250,
         Math.random() * 400 -200,
       );
+      this.rainDrop.velocity = {};
+      this.rainDrop.velocity = 0;
       this.vertices.push(this.rainDrop);
       if(i == this.rainCount-1) {
         this.rainGeo = new THREE.BufferGeometry().setFromPoints(this.vertices);
-        this.rainGeo.attributes.position.needsUpdate = true;
+        console.log(this.rainGeo.getAttribute( 'position' ).count);
+        
      //this.rainGeo.geometry.setAttribute( 'position', new THREE.Float32BufferAttribute( this.vertices, 3 ) );
       //this.rainGeo.geometry.attributes.position.needsUpdate = true;
       }
 
     }
+    this.drops = this.rainGeo.getAttribute( 'position' );
+  
     this.rainMat = new THREE.PointsMaterial({
       color:0xaaaaaa,
       size: 0.1,
@@ -217,9 +223,26 @@ class rainClouds {
         this.flash.power = 50 +Math.random() *300;
         this.flash.intensity = 0;
       }
-        
       
     }
+    if(this.drops) {
+      //this.check = true;
+      for(let i = 0; i < this.drops.count; i++){
+        let y = this.drops.getY( i );  
+        let vel = this.vertices[i].velocity;
+        vel -=1 + Math.random()*0.1;
+        y += vel;
+        if(y <-50) {
+          y = 200;
+          vel = 0;
+        }
+
+        this.rainGeo.getAttribute( 'position' ).setY( i, y);
+
+      }
+
+    }
+    this.rainGeo.attributes.position.needsUpdate = true;
   }
  
   _OnWindowResize() {
@@ -234,6 +257,7 @@ class rainClouds {
           if (this.previousRAF === null) {
             this.previousRAF = t;
           }
+          
 
           this.update();
          // this.plane.material.uniforms.u_time.value =t/1000;
